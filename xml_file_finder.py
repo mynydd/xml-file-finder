@@ -1,25 +1,32 @@
-from lxml import etree
+import argparse
+import fileinput
 from pathlib import Path
-import sys
 from typing import Dict, List
 
-xpath_namespaces : Dict[str,str] = { 
+from lxml import etree
+
+xpath_namespaces : Dict[str,str] = {
     "tei": "http://www.tei-c.org/ns/1.0",
     "xml": "http://www.w3.org/XML/1998/namespace" }
 
 if __name__ == "__main__":
-    if len(sys.argv) > 2:
-        rootdir: str = sys.argv[1]
-        xpath_expression: str = sys.argv[2]
-        printresult: bool = (len(sys.argv) > 3) and (sys.argv[3] == "printresult")
-        parser = etree.XMLParser(recover=True)
-        for xmlfile in Path(rootdir).glob("**/*.xml"):
-            with open(xmlfile) as f:
-                tree = etree.parse(f, parser)
-                result = tree.xpath(xpath_expression, namespaces=xpath_namespaces)
-                if result:
-                    output: str = f"{xmlfile}:{result}" if printresult else xmlfile
-                    print(output)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("xmldir", help="path of directory containing xml files")
+    parser.add_argument("-x", "--xpath", help="xpath expression. If '-' then an expression will be read from standard input", required=True)
+    parser.add_argument("-p", "--printresult", help="print output from xpath evaluations")
+    args = parser.parse_args()
+    xpath_expression: str = ""
+    if args.xpath == "-":
+        for line in fileinput.input(files=["-"]):
+            xpath_expression += line
     else:
-        print("Must supply root dir and xpath. May optionally also specify 'printresult'.")
+        xpath_expression = args.xpath
+    parser = etree.XMLParser(recover=True)
+    for xmlfile in Path(args.xmldir).glob("**/*.xml"):
+        with open(xmlfile) as f:
+            tree = etree.parse(f, parser)
+            result = tree.xpath(xpath_expression, namespaces=xpath_namespaces)
+            if result:
+                output: str = f"{xmlfile}:{result}" if args.printresult else xmlfile
+                print(output)
 
