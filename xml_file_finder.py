@@ -12,8 +12,9 @@ xpath_namespaces : Dict[str,str] = {
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("xmldir", help="path of directory containing xml files")
-    parser.add_argument("-x", "--xpath", help="xpath expression. If '-' then an expression will be read from standard input", required=True)
-    parser.add_argument("-p", "--printresult", help="print output from xpath evaluations")
+    parser.add_argument("xpath", help="xpath expression. If '-' then an expression will be read from standard input")
+    parser.add_argument("--printresult", help="print output from xpath evaluations",
+            action="store_true")
     args = parser.parse_args()
     xpath_expression: str = ""
     if args.xpath == "-":
